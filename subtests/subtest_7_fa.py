@@ -3,6 +3,42 @@ import streamlit.components.v1 as components
 import time
 import json
 import os
+from PIL import Image
+
+def find_image(filename):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    root_dir = os.path.abspath(os.path.join(base_dir, ".."))
+    
+    possible_paths = [
+        filename,
+        os.path.join(base_dir, filename),
+        os.path.join(root_dir, filename),
+        os.path.join(root_dir, "images", filename),
+        os.path.join(root_dir, "assets", filename),
+        os.path.join(root_dir, "subtests", filename),
+        os.path.join("images", filename),
+        os.path.join("assets", filename),
+        os.path.join("subtests", filename)
+    ]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            return path
+    return None
+
+def show_subtest_image(filename, caption_text):
+    img_path = find_image(filename)
+    if img_path:
+        try:
+            img = Image.open(img_path)
+            st.image(img, caption=caption_text, use_container_width=True)
+        except Exception:
+            try:
+                st.image(img_path, caption=caption_text)
+            except Exception as e:
+                st.error(f"Gagal memuat gambar `{filename}`: {e}")
+    else:
+        st.error(f"⚠️ File gambar `{filename}` tidak ditemukan! Pastikan file ini ada di folder `images/`, `subtests/`, atau folder utama (*root*).")
 
 def save_state_disk(email):
     if not email:
@@ -63,11 +99,8 @@ def render_subtest_7_fa():
         Setiap soal memperlihatkan suatu bentuk tertentu yang terpotong menjadi beberapa bagian. Carilah di antara bentuk pilihan (**a, b, c, d, e**) bentuk yang dapat dibangun dengan menyusun potongan-potongan tersebut tanpa ada kelebihan sudut atau ruang.
         """)
 
-        # Tampilkan Gambar Petunjuk jika tersedia
-        for path in ["subtest_7_petunjuk.png", "assets/subtest_7_petunjuk.png", "subtests/subtest_7_petunjuk.png"]:
-            if os.path.exists(path):
-                st.image(path, caption="Petunjuk & Contoh Subtes 7", use_container_width=True)
-                break
+        # Tampilkan Gambar Petunjuk Subtes 7
+        show_subtest_image("subtest_7_petunjuk.png", "Lembar Petunjuk & Contoh Subtes 7")
 
         st.markdown("---")
         if st.button("Mulai Kerjakan Subtes 7 🚀", type="primary"):
@@ -96,11 +129,8 @@ def render_subtest_7_fa():
 
         show_live_timer(remaining)
 
-        # Tampilkan Gambar Soal Utama jika tersedia
-        for path in ["subtest_7_soal.png", "assets/subtest_7_soal.png", "subtests/subtest_7_soal.png"]:
-            if os.path.exists(path):
-                st.image(path, caption="Lembar Soal Subtes 7 (No. 117 - 136)", use_container_width=True)
-                break
+        # Tampilkan Gambar Soal Utama Subtes 7
+        show_subtest_image("subtest_7_soal.png", "Lembar Soal Subtes 7 (No. 117 - 136)")
 
         st.markdown("### Pilih Jawaban untuk Soal No. 117 – 136:")
 
