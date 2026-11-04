@@ -4,19 +4,33 @@ import os
 import json
 from datetime import datetime
 
-# Impor modul Subtes 1, 2, dan 3
+# Impor modul Subtes 1 - 9
 from subtests.subtest_1_se import render_subtest_1_se
 from subtests.subtest_2_wa import render_subtest_2_wa
 from subtests.subtest_3_an import render_subtest_3_an
+from subtests.subtest_4_ge import render_subtest_4_ge
+from subtests.subtest_5_ra import render_subtest_5_ra
+from subtests.subtest_6_zr import render_subtest_6_zr
+from subtests.subtest_7_fa import render_subtest_7_fa
+from subtests.subtest_8_wu import render_subtest_8_wu
+from subtests.subtest_9_me import render_subtest_9_me
+
+# Pustaka Google Sheets (Auto-Sync Cloud)
+try:
+    import gspread
+    from google.oauth2.service_account import Credentials
+    HAS_GSPREAD = True
+except ImportError:
+    HAS_GSPREAD = False
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(
-    page_title="Portal Psikotes IST Bagian 1 - PT Bumi Mas Wahyu",
+    page_title="Portal Psikotes - PT Bumi Mas Wahyu",
     page_icon="🧠",
     layout="wide"
 )
 
-RESULTS_FILE = "rekap_ist_bagian1.csv"
+RESULTS_FILE = "rekap_psikotes_bmw.csv"
 ADMIN_PASSWORD = "adminbmw"
 
 # --- HELPER DOKUMEN SEMENTARA & TIMESTAMPS ---
@@ -59,45 +73,144 @@ def load_app_state(email):
             pass
     return {}, {}, 1, {}
 
+# --- FUNGSI SIMPAN OTOMATIS KE GOOGLE SHEETS ---
+def save_to_google_sheets(record_dict):
+    if not HAS_GSPREAD or "gcp_service_account" not in st.secrets:
+        return False
+    try:
+        scope = [
+            "[suspicious link removed]",
+            "[suspicious link removed]"
+        ]
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+        client = gspread.authorize(creds)
+        
+        sheet_url = st.secrets["gcp_service_account"].get("spreadsheet_url", "")
+        if not sheet_url:
+            return False
+            
+        sheet = client.open_by_url(sheet_url).sheet1
+        existing_rows = sheet.get_all_values()
+        if len(existing_rows) == 0:
+            header = list(record_dict.keys())
+            sheet.append_row(header)
+            
+        row = [str(val) for val in record_dict.values()]
+        sheet.append_row(row)
+        return True
+    except Exception:
+        return False
+
 @st.cache_data(ttl=5)
 def load_results_data(file_path):
     if os.path.exists(file_path):
         return pd.read_csv(file_path, sep=';')
     return pd.DataFrame()
 
-# --- KUNCI JAWABAN RESMI IST (SUBTES 1 - 3) ---
+# --- KUNCI JAWABAN RESMI SUBTES 1, 2, 3, 5, 6, 7, 8, 9 ---
 ANSWER_KEYS_MC = {
-    # Subtes 1 (SE)
+    # Subtes 1
     1: "e) kewibawaan", 2: "c) boros", 3: "d) gempa bumi", 4: "d) khianat", 5: "d) kuku",
     6: "b) biasanya", 7: "c) lemak", 8: "a) lawan", 9: "e) hipotesis", 10: "b) sol",
     11: "c) kotak PPPK", 12: "d) 20", 13: "d) konservatif", 14: "e) selalu", 15: "c) 800",
     16: "a) kekuatan", 17: "b) biasanya", 18: "b) Bandung", 19: "c) kemungkinan menang", 20: "b) 130",
 
-    # Subtes 2 (WA)
+    # Subtes 2
     21: "b) panah", 22: "b) memaki", 23: "d) isi", 24: "c) melepaskan", 25: "c) perjalanan",
     26: "c) tugas", 27: "c) payung", 28: "d) kasar", 29: "d) sepeda", 30: "a) biola",
     31: "e) lurus", 32: "a) jam", 33: "a) kebijaksanaan", 34: "b) berjalan", 35: "c) potret",
     36: "a) panjang", 37: "d) gunting", 38: "e) masyarakat", 39: "b) menasehati", 40: "c) bulu",
 
-    # Subtes 3 (AN)
+    # Subtes 3
     41: "c) melupakan", 42: "e) sangkar", 43: "d) jalan raya", 44: "d) gelang", 45: "d) kubus",
     46: "a) menawarkan", 47: "d) tengik", 48: "b) sungai", 49: "e) pelindung", 50: "d) tukang emas",
     51: "c) nada", 52: "c) kelakar", 53: "c) suasana hati", 54: "c) sutra", 55: "d) panjang senar",
-    56: "c) mutasi", 57: "c) es", 58: "d) dikikir", 59: "e) mikroskop", 60: "e) lautan api"
+    56: "c) mutasi", 57: "c) es", 58: "d) dikikir", 59: "e) mikroskop", 60: "e) lautan api",
+
+    # Subtes 5 (Hitungan)
+    77: "35", 78: "280", 79: "205", 80: "26", 81: "30",
+    82: "70", 83: "45", 84: "50", 85: "84", 86: "78",
+    87: "19", 88: "6", 89: "75", 90: "90", 91: "120",
+    92: "17", 93: "36", 94: "5", 95: "48", 96: "1",
+
+    # Subtes 6 (Deret Angka)
+    97: "27", 98: "25", 99: "27", 100: "15", 101: "46",
+    102: "10", 103: "42", 104: "7", 105: "5", 106: "14",
+    107: "8", 108: "14", 109: "45", 110: "63", 111: "12",
+    112: "80", 113: "14", 114: "12", 115: "63", 116: "10",
+
+    # Subtes 7 (Potongan Gambar)
+    117: "a", 118: "c", 119: "d", 120: "b", 121: "d", 122: "e", 123: "c", 124: "e", 125: "e",
+    126: "d", 127: "d", 128: "b", 129: "d", 130: "c", 131: "b", 132: "e", 133: "b", 134: "d", 135: "c", 136: "a",
+
+    # Subtes 8 (Kubus)
+    137: "a", 138: "c", 139: "d", 140: "e", 141: "a", 142: "c", 143: "d", 144: "c", 145: "e",
+    146: "a", 147: "b", 148: "d", 149: "e", 150: "b", 151: "d", 152: "b", 153: "a", 154: "e", 155: "b", 156: "c",
+
+    # Subtes 9 (Mengingat Kata)
+    157: "d) Kesenian", 158: "e) Binatang", 159: "b) Perkakas", 160: "a) Bunga", 161: "c) Burung",
+    162: "a) Bunga", 163: "d) Kesenian", 164: "e) Binatang", 165: "c) Burung", 166: "b) Perkakas",
+    167: "b) Perkakas", 168: "a) Bunga", 169: "e) Binatang", 170: "c) Burung", 171: "d) Kesenian",
+    172: "b) Perkakas", 173: "e) Binatang", 174: "a) Bunga", 175: "c) Burung", 176: "d) Kesenian"
 }
+
+# --- KUNCI PENILAIAN SUBTES 4 (KESAMAAN KATA) ---
+GE_KEYS = {
+    61: {2: ["bunga", "kembang", "perdu"], 1: ["tumbuhan", "tumbuh-tumbuhan", "tangkai", "harum"]},
+    62: {2: ["alat indera", "indera", "panca indera"], 1: ["organ", "alat tubuh"]},
+    63: {2: ["hablur", "kristal", "zat arang"], 1: ["berkilauan", "mengkilat", "bening"]},
+    64: {2: ["musim"], 1: ["cuaca"]},
+    65: {2: ["pembawa berita", "alat perhubungan"], 1: ["telekomunikasi", "perhubungan", "komunikasi"]},
+    66: {2: ["alat optik", "optik"], 1: ["lensa"]},
+    67: {2: ["alat pencernaan", "perut", "isi perut", "pencernaan makanan"], 1: ["jalan makanan"]},
+    68: {2: ["jumlah", "kuantitas", "penyebut jumlah", "penyertaan jumlah"], 1: ["mengukur", "ukuran"]},
+    69: {2: ["bibit", "bakal", "embrio", "alat pembiak", "permulaan penghidupan"], 1: ["sel", "pembiakan"]},
+    70: {2: ["simbol", "lambang", "tanda"], 1: ["nama", "tanda pengenal"]},
+    71: {2: ["makhluk", "organism", "makhluk hidup"], 1: ["tumbuh", "ilmu hayat", "biologi"]},
+    72: {2: ["wadah", "tempat pengisi", "tempat penyimpan", "tempat"], 1: ["alat", "tempat sesuatu", "benda"]},
+    73: {2: ["pengertian waktu", "batas"], 1: ["waktu", "lamanya", "masa", "saat"]},
+    74: {2: ["kata sifat", "watak", "sifat karakter"], 1: ["sifat"]},
+    75: {2: ["regulator harga", "pengertian ekonomi"], 1: ["dagang", "pembelian", "penjualan", "niaga", "jual beli"]},
+    76: {2: ["pengertian ruang", "penyebut ruang"], 1: ["arah", "tempat", "ruang", "letak", "penunjuk tempat", "penentuan daerah"]}
+}
+
+def calculate_ge_score(q_id, user_ans):
+    if not user_ans:
+        return 0
+    ans_clean = str(user_ans).strip().lower()
+    for kw in GE_KEYS.get(q_id, {}).get(2, []):
+        if kw in ans_clean:
+            return 2
+    for kw in GE_KEYS.get(q_id, {}).get(1, []):
+        if kw in ans_clean:
+            return 1
+    return 0
 
 def calculate_scores():
     user_answers = st.session_state.get("answers", {})
-    score_se = sum(1 for q_id in range(1, 21) if user_answers.get(q_id) == ANSWER_KEYS_MC.get(q_id))
-    score_wa = sum(1 for q_id in range(21, 41) if user_answers.get(q_id) == ANSWER_KEYS_MC.get(q_id))
-    score_an = sum(1 for q_id in range(41, 61) if user_answers.get(q_id) == ANSWER_KEYS_MC.get(q_id))
+    score_sub1 = sum(1 for q_id in range(1, 21) if user_answers.get(q_id) == ANSWER_KEYS_MC.get(q_id))
+    score_sub2 = sum(1 for q_id in range(21, 41) if user_answers.get(q_id) == ANSWER_KEYS_MC.get(q_id))
+    score_sub3 = sum(1 for q_id in range(41, 61) if user_answers.get(q_id) == ANSWER_KEYS_MC.get(q_id))
+    score_sub4 = sum(calculate_ge_score(q_id, user_answers.get(q_id)) for q_id in range(61, 77))
+    score_sub5 = sum(1 for q_id in range(77, 97) if str(user_answers.get(q_id, '')).strip() == ANSWER_KEYS_MC.get(q_id))
+    score_sub6 = sum(1 for q_id in range(97, 117) if str(user_answers.get(q_id, '')).strip() == ANSWER_KEYS_MC.get(q_id))
+    score_sub7 = sum(1 for q_id in range(117, 137) if str(user_answers.get(q_id, '')).strip().lower() == ANSWER_KEYS_MC.get(q_id))
+    score_sub8 = sum(1 for q_id in range(137, 157) if str(user_answers.get(q_id, '')).strip().lower() == ANSWER_KEYS_MC.get(q_id))
+    score_sub9 = sum(1 for q_id in range(157, 177) if user_answers.get(q_id) == ANSWER_KEYS_MC.get(q_id))
     
-    total_raw = score_se + score_wa + score_an
+    total_raw = score_sub1 + score_sub2 + score_sub3 + score_sub4 + score_sub5 + score_sub6 + score_sub7 + score_sub8 + score_sub9
     return {
-        "Subtes_1_SE": score_se,
-        "Subtes_2_WA": score_wa,
-        "Subtes_3_AN": score_an,
-        "Total_Raw_Score_Bagian1": total_raw
+        "Subtes_1": score_sub1,
+        "Subtes_2": score_sub2,
+        "Subtes_3": score_sub3,
+        "Subtes_4": score_sub4,
+        "Subtes_5": score_sub5,
+        "Subtes_6": score_sub6,
+        "Subtes_7": score_sub7,
+        "Subtes_8": score_sub8,
+        "Subtes_9": score_sub9,
+        "Total_Skor_Mentah": total_raw
     }
 
 # --- SINKRONISASI SESSION & QUERY PARAMS ---
@@ -133,7 +246,7 @@ mode = st.sidebar.radio("Pilih Akses:", ["Portal Tes Pelamar", "Dashboard Admin 
 if mode == "Portal Tes Pelamar":
     if st.session_state.page == "register":
         st.title("🏛️ PT Bumi Mas Wahyu")
-        st.subheader("Portal Psikotes Online - IST Bagian 1 (Subtes 1 - 3)")
+        st.subheader("Portal Psikotes Online Pelamar Karyawan")
         st.info("Mohon isi data diri Anda dengan lengkap sebelum memulai ujian.")
 
         with st.form("form_registrasi_awal"):
@@ -142,7 +255,7 @@ if mode == "Portal Tes Pelamar":
             no_hp = st.text_input("Nomor WhatsApp / HP:")
             posisi = st.text_input("Posisi yang Dilamar:", placeholder="Contoh: Staff Closing / Admin HR")
 
-            btn_start = st.form_submit_button("Mulai Tes IST Bagian 1 🚀", type="primary")
+            btn_start = st.form_submit_button("Mulai Psikotes 🚀", type="primary")
 
             if btn_start:
                 if not nama or not email or not no_hp or not posisi:
@@ -178,20 +291,33 @@ if mode == "Portal Tes Pelamar":
             render_subtest_2_wa()
         elif curr_sub == 3:
             render_subtest_3_an()
-        elif curr_sub >= 4:
+        elif curr_sub == 4:
+            render_subtest_4_ge()
+        elif curr_sub == 5:
+            render_subtest_5_ra()
+        elif curr_sub == 6:
+            render_subtest_6_zr()
+        elif curr_sub == 7:
+            render_subtest_7_fa()
+        elif curr_sub == 8:
+            render_subtest_8_wu()
+        elif curr_sub == 9:
+            render_subtest_9_me()
+        elif curr_sub >= 10:
             st.session_state.page = "result"
             st.query_params["page"] = "result"
             st.rerun()
 
     elif st.session_state.page == "result":
-        st.title("✅ Psikotes IST Bagian 1 Selesai")
-        st.success(f"Terima kasih **{st.session_state.user_info.get('nama', '')}**, jawaban Bagian 1 Anda telah disimpan.")
+        st.title("✅ Psikotes Selesai")
+        st.success(f"Terima kasih **{st.session_state.user_info.get('nama', '')}**, seluruh jawaban psikotes (Subtes 1 - 9) Anda telah berhasil disimpan.")
 
         if not st.session_state.saved:
             scores = calculate_scores()
             record = {**st.session_state.user_info, **scores}
-            df_new = pd.DataFrame([record])
 
+            # 1. Simpan CSV lokal
+            df_new = pd.DataFrame([record])
             if os.path.exists(RESULTS_FILE):
                 df_old = pd.read_csv(RESULTS_FILE, sep=';')
                 df_final = pd.concat([df_old, df_new], ignore_index=True)
@@ -199,20 +325,23 @@ if mode == "Portal Tes Pelamar":
                 df_final = df_new
 
             df_final.to_csv(RESULTS_FILE, index=False, sep=';', encoding='utf-8-sig')
+            
+            # 2. Simpan Cloud Google Sheets
+            save_to_google_sheets(record)
+
             st.session_state.saved = True
             st.cache_data.clear()
 
-        st.info("Data hasil ujian Bagian 1 telah disinkronkan langsung ke Dashboard HRD.")
+        st.info("Data hasil ujian telah disinkronkan ke Dashboard Rekrutmen HRD PT Bumi Mas Wahyu & Google Sheets.")
 
         st.markdown("---")
-        # Tombol reset untuk membersihkan query URL & session state
         if st.button("🔄 Selesai & Kembali ke Halaman Registrasi Awal", type="primary"):
             st.query_params.clear()
             st.session_state.clear()
             st.rerun()
 
 elif mode == "Dashboard Admin HRD":
-    st.title("🔐 Dashboard Rekrutmen HRD (Bagian 1) - PT Bumi Mas Wahyu")
+    st.title("🔐 Dashboard Rekrutmen HRD - PT Bumi Mas Wahyu")
     if not st.session_state.admin_logged_in:
         pwd = st.text_input("Masukkan Kata Sandi Admin HRD:", type="password")
         if st.button("Login HRD"):
@@ -226,9 +355,9 @@ elif mode == "Dashboard Admin HRD":
         df_results = load_results_data(RESULTS_FILE)
 
         if df_results.empty:
-            st.warning("Belum ada data kandidat yang menyelesaikan Bagian 1.")
+            st.warning("Belum ada data kandidat yang menyelesaikan psikotes.")
         else:
-            st.metric("Total Kandidat Tes", len(df_results))
+            st.metric("Total Kandidat Selesai", len(df_results))
             st.dataframe(df_results, use_container_width=True)
             csv_data = df_results.to_csv(index=False, sep=';', encoding='utf-8-sig').encode('utf-8-sig')
-            st.download_button("📥 Unduh Rekap CSV", csv_data, f"rekap_ist_bagian1_{datetime.now().strftime('%Y%m%d')}.csv", "text/csv")
+            st.download_button("📥 Unduh Rekap CSV", csv_data, f"rekap_psikotes_bmw_{datetime.now().strftime('%Y%m%d')}.csv", "text/csv")
