@@ -20,12 +20,12 @@ def save_state_disk(email):
     except Exception:
         pass
 
-def show_live_timer_an(seconds_remaining):
+def show_live_timer(seconds_remaining):
     components.html(f"""
     <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #d9534f; 
                 background-color: #fdf7f7; padding: 10px 15px; border: 2px solid #d9534f; 
                 border-radius: 8px; text-align: center; margin-bottom: 10px;">
-        ⏱️ SISA WAKTU SUBTES 3 (AN): <span id="timer_display_an">--:--</span>
+        ⏱️ SISA WAKTU SUBTES 3: <span id="timer_display">--:--</span>
     </div>
     <script>
         var timeLeft = {seconds_remaining};
@@ -34,7 +34,7 @@ def show_live_timer_an(seconds_remaining):
             var s = timeLeft % 60;
             var displayM = m < 10 ? "0" + m : m;
             var displayS = s < 10 ? "0" + s : s;
-            var elem = document.getElementById("timer_display_an");
+            var elem = document.getElementById("timer_display");
             if (elem) {{ elem.innerHTML = displayM + ":" + displayS; }}
             if (timeLeft <= 0) {{ 
                 if (elem) elem.innerHTML = "00:00 (WAKTU HABIS)"; 
@@ -49,13 +49,13 @@ def show_live_timer_an(seconds_remaining):
     """, height=75)
 
 def render_subtest_3_an():
-    if "step_an" not in st.session_state:
-        st.session_state.step_an = "instruction"
+    if "step_sub3" not in st.session_state:
+        st.session_state.step_sub3 = "instruction"
 
     email = st.session_state.get("user_info", {}).get("email", "")
 
-    if st.session_state.step_an == "instruction":
-        st.title("📑 Petunjuk Subtes 03: AN (Hubungan Kata / Analogi)")
+    if st.session_state.step_sub3 == "instruction":
+        st.title("📑 Petunjuk Subtes 3")
         st.info("💡 Bacalah petunjuk di bawah ini. **Timer belum berjalan di halaman ini.**")
         st.markdown("""
         ### Aturan Pengerjaan:
@@ -73,32 +73,32 @@ def render_subtest_3_an():
         """)
         st.markdown("---")
         if st.button("Mulai Kerjakan Subtes 3 🚀", type="primary"):
-            st.session_state.step_an = "test"
+            st.session_state.step_sub3 = "test"
             if "sub3" not in st.session_state.start_times:
                 st.session_state.start_times["sub3"] = time.time()
             save_state_disk(email)
             st.rerun()
 
-    elif st.session_state.step_an == "test":
-        st.title("🧠 Subtes 03: AN (Hubungan Kata)")
+    elif st.session_state.step_sub3 == "test":
+        st.title("🧠 Subtes 3")
         
         if "sub3" not in st.session_state.start_times:
             st.session_state.start_times["sub3"] = time.time()
 
         elapsed = int(time.time() - st.session_state.start_times["sub3"])
-        remaining = max(0, 420 - elapsed) # Durasi 7 menit
+        remaining = max(0, 420 - elapsed) # 7 menit
 
         if remaining <= 0:
-            st.warning("⏰ Waktu Subtes 3 telah habis! Menyelesaikan Bagian 1...")
+            st.warning("⏰ Waktu Subtes 3 telah habis! Pindah otomatis ke Subtes 4...")
             st.session_state.current_subtest = 4
             st.query_params["subtest"] = "4"
             save_state_disk(email)
             time.sleep(1)
             st.rerun()
 
-        show_live_timer_an(remaining)
+        show_live_timer(remaining)
 
-        questions_an = [
+        questions = [
             {"id": 41, "no": "41", "q": "Menemukan : menghilangkan = Mengingat : ?", "opts": ["a) menghapal", "b) mengenai", "c) melupakan", "d) berpikir", "e) memimpikan"]},
             {"id": 42, "no": "42", "q": "Bunga : jambangan = Burung : ?", "opts": ["a) sarang", "b) langit", "c) pagar", "d) pohon", "e) sangkar"]},
             {"id": 43, "no": "43", "q": "Kereta api : rel = Otobis : ?", "opts": ["a) roda", "b) poros", "c) ban", "d) jalan raya", "e) kecepatan"]},
@@ -121,19 +121,19 @@ def render_subtest_3_an():
             {"id": 60, "no": "60", "q": "Keledai : kuda pacuan = Pembakaran : ?", "opts": ["a) pemadam api", "b) obor", "c) letupan", "d) korek api", "e) lautan api"]}
         ]
 
-        for q in questions_an:
+        for q in questions:
             st.markdown(f"**Soal {q['no']}.** {q['q']}")
             ans = st.radio(
                 f"Pilih Jawaban No. {q['no']}:",
                 options=q['opts'],
-                key=f"an_{q['id']}"
+                key=f"sub3_{q['id']}"
             )
             st.session_state.answers[q['id']] = ans
             st.markdown("---")
 
         save_state_disk(email)
 
-        if st.button("Simpan & Selesaikan Bagian 1 🏁", type="primary"):
+        if st.button("Simpan & Lanjut ke Subtes 4 ➔", type="primary"):
             st.session_state.current_subtest = 4
             st.query_params["subtest"] = "4"
             save_state_disk(email)
