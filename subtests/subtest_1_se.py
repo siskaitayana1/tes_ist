@@ -2,7 +2,6 @@ import streamlit as st
 import streamlit.components.v1 as components
 import time
 import json
-import os
 
 def save_state_disk(email):
     if not email:
@@ -21,12 +20,12 @@ def save_state_disk(email):
     except Exception:
         pass
 
-def show_live_timer_se(seconds_remaining):
+def show_live_timer(seconds_remaining):
     components.html(f"""
     <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #d9534f; 
                 background-color: #fdf7f7; padding: 10px 15px; border: 2px solid #d9534f; 
                 border-radius: 8px; text-align: center; margin-bottom: 10px;">
-        ⏱️ SISA WAKTU SUBTES 1 (SE): <span id="timer_display_se">--:--</span>
+        ⏱️ SISA WAKTU SUBTES 1: <span id="timer_display">--:--</span>
     </div>
     <script>
         var timeLeft = {seconds_remaining};
@@ -35,7 +34,7 @@ def show_live_timer_se(seconds_remaining):
             var s = timeLeft % 60;
             var displayM = m < 10 ? "0" + m : m;
             var displayS = s < 10 ? "0" + s : s;
-            var elem = document.getElementById("timer_display_se");
+            var elem = document.getElementById("timer_display");
             if (elem) {{ elem.innerHTML = displayM + ":" + displayS; }}
             if (timeLeft <= 0) {{ 
                 if (elem) elem.innerHTML = "00:00 (WAKTU HABIS)"; 
@@ -50,13 +49,13 @@ def show_live_timer_se(seconds_remaining):
     """, height=75)
 
 def render_subtest_1_se():
-    if "step_se" not in st.session_state:
-        st.session_state.step_se = "instruction"
+    if "step_sub1" not in st.session_state:
+        st.session_state.step_sub1 = "instruction"
 
     email = st.session_state.get("user_info", {}).get("email", "")
 
-    if st.session_state.step_se == "instruction":
-        st.title("📑 Petunjuk Subtes 01: SE (Melengkapi Kalimat)")
+    if st.session_state.step_sub1 == "instruction":
+        st.title("📑 Petunjuk Subtes 1")
         st.info("💡 Bacalah petunjuk di bawah ini. **Timer belum berjalan di halaman ini.**")
         st.markdown("""
         ### Aturan Pengerjaan:
@@ -76,23 +75,21 @@ def render_subtest_1_se():
         """)
         st.markdown("---")
         if st.button("Mulai Kerjakan Subtes 1 🚀", type="primary"):
-            st.session_state.step_se = "test"
+            st.session_state.step_sub1 = "test"
             if "sub1" not in st.session_state.start_times:
                 st.session_state.start_times["sub1"] = time.time()
             save_state_disk(email)
             st.rerun()
 
-    elif st.session_state.step_se == "test":
-        st.title("🧠 Subtes 01: SE (Melengkapi Kalimat)")
+    elif st.session_state.step_sub1 == "test":
+        st.title("🧠 Subtes 1")
         
-        # Kunci timestamp pengerjaan di server
         if "sub1" not in st.session_state.start_times:
             st.session_state.start_times["sub1"] = time.time()
 
         elapsed = int(time.time() - st.session_state.start_times["sub1"])
-        remaining = max(0, 360 - elapsed) # Durasi 6 menit
+        remaining = max(0, 360 - elapsed) # 6 menit
 
-        # Pengecekan Waktu Server
         if remaining <= 0:
             st.warning("⏰ Waktu Subtes 1 telah habis! Pindah otomatis ke Subtes 2...")
             st.session_state.current_subtest = 2
@@ -101,9 +98,9 @@ def render_subtest_1_se():
             time.sleep(1)
             st.rerun()
 
-        show_live_timer_se(remaining)
+        show_live_timer(remaining)
 
-        questions_se = [
+        questions = [
             {"id": 1, "no": "01", "q": "Pengaruh seseorang terhadap orang lain seharusnya bergantung pada .....", "opts": ["a) kekuasaan", "b) bujukan", "c) kekayaan", "d) keberanian", "e) kewibawaan"]},
             {"id": 2, "no": "02", "q": "Lawannya 'hemat' ialah .....", "opts": ["a) murah", "b) kikir", "c) boros", "d) bernilai", "e) kaya"]},
             {"id": 3, "no": "03", "q": "..... tidak termasuk cuaca", "opts": ["a) angin puyuh", "b) halilintar", "c) salju", "d) gempa bumi", "e) kabut"]},
@@ -126,19 +123,19 @@ def render_subtest_1_se():
             {"id": 20, "no": "20", "q": "Seorang anak yang berumur 10 tahun tingginya rata-rata ..... cm", "opts": ["a) 150", "b) 130", "c) 110", "d) 105", "e) 115"]}
         ]
 
-        for q in questions_se:
+        for q in questions:
             st.markdown(f"**Soal {q['no']}.** {q['q']}")
             ans = st.radio(
                 f"Pilih Jawaban No. {q['no']}:",
                 options=q['opts'],
-                key=f"se_{q['id']}"
+                key=f"sub1_{q['id']}"
             )
             st.session_state.answers[q['id']] = ans
             st.markdown("---")
 
         save_state_disk(email)
 
-        if st.button("Simpan & Lanjut ke Subtes 2 (WA) ➔", type="primary"):
+        if st.button("Simpan & Lanjut ke Subtes 2 ➔", type="primary"):
             st.session_state.current_subtest = 2
             st.query_params["subtest"] = "2"
             save_state_disk(email)
