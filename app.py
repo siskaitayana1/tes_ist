@@ -204,6 +204,13 @@ if mode == "Portal Tes Pelamar":
 
         st.info("Data hasil ujian Bagian 1 telah disinkronkan langsung ke Dashboard HRD.")
 
+        st.markdown("---")
+        # Tombol reset untuk membersihkan query URL & session state
+        if st.button("🔄 Selesai & Kembali ke Halaman Registrasi Awal", type="primary"):
+            st.query_params.clear()
+            st.session_state.clear()
+            st.rerun()
+
 elif mode == "Dashboard Admin HRD":
     st.title("🔐 Dashboard Rekrutmen HRD (Bagian 1) - PT Bumi Mas Wahyu")
     if not st.session_state.admin_logged_in:
