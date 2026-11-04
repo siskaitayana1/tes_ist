@@ -20,12 +20,12 @@ def save_state_disk(email):
     except Exception:
         pass
 
-def show_live_timer_wa(seconds_remaining):
+def show_live_timer(seconds_remaining):
     components.html(f"""
     <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #d9534f; 
                 background-color: #fdf7f7; padding: 10px 15px; border: 2px solid #d9534f; 
                 border-radius: 8px; text-align: center; margin-bottom: 10px;">
-        ⏱️ SISA WAKTU SUBTES 2 (WA): <span id="timer_display_wa">--:--</span>
+        ⏱️ SISA WAKTU SUBTES 2: <span id="timer_display">--:--</span>
     </div>
     <script>
         var timeLeft = {seconds_remaining};
@@ -34,7 +34,7 @@ def show_live_timer_wa(seconds_remaining):
             var s = timeLeft % 60;
             var displayM = m < 10 ? "0" + m : m;
             var displayS = s < 10 ? "0" + s : s;
-            var elem = document.getElementById("timer_display_wa");
+            var elem = document.getElementById("timer_display");
             if (elem) {{ elem.innerHTML = displayM + ":" + displayS; }}
             if (timeLeft <= 0) {{ 
                 if (elem) elem.innerHTML = "00:00 (WAKTU HABIS)"; 
@@ -49,13 +49,13 @@ def show_live_timer_wa(seconds_remaining):
     """, height=75)
 
 def render_subtest_2_wa():
-    if "step_wa" not in st.session_state:
-        st.session_state.step_wa = "instruction"
+    if "step_sub2" not in st.session_state:
+        st.session_state.step_sub2 = "instruction"
 
     email = st.session_state.get("user_info", {}).get("email", "")
 
-    if st.session_state.step_wa == "instruction":
-        st.title("📑 Petunjuk Subtes 02: WA (Mencari Kata Berbeda)")
+    if st.session_state.step_sub2 == "instruction":
+        st.title("📑 Petunjuk Subtes 2")
         st.info("💡 Bacalah petunjuk di bawah ini. **Timer belum berjalan di halaman ini.**")
         st.markdown("""
         ### Aturan Pengerjaan:
@@ -73,20 +73,20 @@ def render_subtest_2_wa():
         """)
         st.markdown("---")
         if st.button("Mulai Kerjakan Subtes 2 🚀", type="primary"):
-            st.session_state.step_wa = "test"
+            st.session_state.step_sub2 = "test"
             if "sub2" not in st.session_state.start_times:
                 st.session_state.start_times["sub2"] = time.time()
             save_state_disk(email)
             st.rerun()
 
-    elif st.session_state.step_wa == "test":
-        st.title("🧠 Subtes 02: WA (Mencari Kata Berbeda)")
+    elif st.session_state.step_sub2 == "test":
+        st.title("🧠 Subtes 2")
         
         if "sub2" not in st.session_state.start_times:
             st.session_state.start_times["sub2"] = time.time()
 
         elapsed = int(time.time() - st.session_state.start_times["sub2"])
-        remaining = max(0, 360 - elapsed) # Durasi 6 menit
+        remaining = max(0, 360 - elapsed) # 6 menit
 
         if remaining <= 0:
             st.warning("⏰ Waktu Subtes 2 telah habis! Pindah otomatis ke Subtes 3...")
@@ -96,9 +96,9 @@ def render_subtest_2_wa():
             time.sleep(1)
             st.rerun()
 
-        show_live_timer_wa(remaining)
+        show_live_timer(remaining)
 
-        questions_wa = [
+        questions = [
             {"id": 21, "no": "21", "opts": ["a) lingkungan", "b) panah", "c) elips", "d) busur", "e) lengkungan"]},
             {"id": 22, "no": "22", "opts": ["a) mengetuk", "b) memaki", "c) menjahit", "d) menggergaji", "e) memukul"]},
             {"id": 23, "no": "23", "opts": ["a) lebar", "b) keliling", "c) luas", "d) isi", "e) panjang"]},
@@ -121,19 +121,19 @@ def render_subtest_2_wa():
             {"id": 40, "no": "40", "opts": ["a) batu", "b) baja", "c) bulu", "d) karet", "e) kayu"]}
         ]
 
-        for q in questions_wa:
+        for q in questions:
             st.markdown(f"**Soal {q['no']}.** Pilih kata yang paling berbeda:")
             ans = st.radio(
                 f"Pilihan Jawaban No. {q['no']}:",
                 options=q['opts'],
-                key=f"wa_{q['id']}"
+                key=f"sub2_{q['id']}"
             )
             st.session_state.answers[q['id']] = ans
             st.markdown("---")
 
         save_state_disk(email)
 
-        if st.button("Simpan & Lanjut ke Subtes 3 (AN) ➔", type="primary"):
+        if st.button("Simpan & Lanjut ke Subtes 3 ➔", type="primary"):
             st.session_state.current_subtest = 3
             st.query_params["subtest"] = "3"
             save_state_disk(email)
