@@ -6,24 +6,27 @@ import os
 from PIL import Image
 
 def find_image(filename):
+    target_lower = filename.lower()
     base_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.abspath(os.path.join(base_dir, ".."))
     
-    possible_paths = [
-        filename,
-        os.path.join(base_dir, filename),
-        os.path.join(root_dir, filename),
-        os.path.join(root_dir, "images", filename),
-        os.path.join(root_dir, "assets", filename),
-        os.path.join(root_dir, "subtests", filename),
-        os.path.join("images", filename),
-        os.path.join("assets", filename),
-        os.path.join("subtests", filename)
+    search_dirs = [
+        root_dir,
+        os.path.join(root_dir, "images"),
+        os.path.join(root_dir, "subtests"),
+        os.path.join(root_dir, "assets"),
+        base_dir,
+        os.getcwd()
     ]
     
-    for path in possible_paths:
-        if os.path.exists(path):
-            return path
+    for folder in search_dirs:
+        if os.path.exists(folder):
+            try:
+                for f in os.listdir(folder):
+                    if f.lower() == target_lower:
+                        return os.path.join(folder, f)
+            except Exception:
+                pass
     return None
 
 def show_subtest_image(filename, caption_text):
@@ -32,13 +35,11 @@ def show_subtest_image(filename, caption_text):
         try:
             img = Image.open(img_path)
             st.image(img, caption=caption_text, use_container_width=True)
-        except Exception:
-            try:
-                st.image(img_path, caption=caption_text)
-            except Exception as e:
-                st.error(f"Gagal memuat gambar `{filename}`: {e}")
+        except Exception as e:
+            st.error(f"Gagal membuka file gambar `{filename}`: {e}")
     else:
-        st.error(f"⚠️ File gambar `{filename}` tidak ditemukan! Pastikan file ini ada di folder `images/`, `subtests/`, atau folder utama (*root*).")
+        st.error(f"⚠️ Gambar `{filename}` tidak ditemukan di server.")
+        st.info("💡 **Petunjuk:** Pastikan file gambar sudah di-upload ke GitHub (misal di folder `images/` atau folder utama).")
 
 def save_state_disk(email):
     if not email:
