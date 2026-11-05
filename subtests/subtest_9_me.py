@@ -22,8 +22,8 @@ def save_state_disk(email):
 
 def show_live_timer_memorize(seconds_remaining):
     components.html(f"""
-    <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #2e6da4; 
-                background-color: #eef7ff; padding: 12px 15px; border: 2px solid #2e6da4; 
+    <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #1e40af; 
+                background-color: #eff6ff; padding: 12px 15px; border: 2px solid #2563eb; 
                 border-radius: 8px; text-align: center; margin-bottom: 10px;">
         ⏱️ SISA WAKTU MENGHAFAL KATA: <span id="timer_mem">--:--</span>
     </div>
@@ -50,8 +50,8 @@ def show_live_timer_memorize(seconds_remaining):
 
 def show_live_timer_test(seconds_remaining):
     components.html(f"""
-    <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #d9534f; 
-                background-color: #fdf7f7; padding: 10px 15px; border: 2px solid #d9534f; 
+    <div style="font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; color: #dc2626; 
+                background-color: #fef2f2; padding: 10px 15px; border: 2px solid #dc2626; 
                 border-radius: 8px; text-align: center; margin-bottom: 10px;">
         ⏱️ SISA WAKTU SOAL SUBTES 9: <span id="timer_test">--:--</span>
     </div>
@@ -121,13 +121,15 @@ def render_subtest_9_me():
         show_live_timer_memorize(remaining)
 
         st.success("Hafalkan kata-kata di bawah ini secara cermat!")
+        
+        # Kotak Hafalan dengan Kontras Tinggi & Warna Teks Terkunci Eksplisit
         st.markdown("""
-        <div style="background-color: #ffffff; padding: 20px; border-radius: 10px; border: 2px solid #2e6da4; font-size: 18px; line-height: 1.8;">
-            <p><b>BUNGA</b> : SOKA, LARAT, FLAMBOYAN, YASMIN, DAHLIA</p>
-            <p><b>PERKAKAS</b> : WAJAN, JARUM, KIKIR, CANGKUL, PALU</p>
-            <p><b>BURUNG</b> : ITIK, ELANG, WALET, TEKUKUR, NURI</p>
-            <p><b>KESENIAN</b> : QUINTET, ARCA, OPERA, UKIRAN, GAMELAN</p>
-            <p><b>BINATANG</b> : RUSA, MUSANG, BERUANG, HARIMAU, ZEBRA</p>
+        <div style="background-color: #f8fafc; color: #0f172a; padding: 20px; border-radius: 10px; border: 2px solid #2563eb; font-size: 18px; line-height: 1.8;">
+            <p style="color: #0f172a; margin-bottom: 8px;"><b>BUNGA</b> : SOKA, LARAT, FLAMBOYAN, YASMIN, DAHLIA</p>
+            <p style="color: #0f172a; margin-bottom: 8px;"><b>PERKAKAS</b> : WAJAN, JARUM, KIKIR, CANGKUL, PALU</p>
+            <p style="color: #0f172a; margin-bottom: 8px;"><b>BURUNG</b> : ITIK, ELANG, WALET, TEKUKUR, NURI</p>
+            <p style="color: #0f172a; margin-bottom: 8px;"><b>KESENIAN</b> : QUINTET, ARCA, OPERA, UKIRAN, GAMELAN</p>
+            <p style="color: #0f172a; margin-bottom: 0px;"><b>BINATANG</b> : RUSA, MUSANG, BERUANG, HARIMAU, ZEBRA</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -146,7 +148,7 @@ def render_subtest_9_me():
             st.session_state.start_times["sub9_test"] = time.time()
 
         elapsed = int(time.time() - st.session_state.start_times["sub9_test"])
-        remaining = max(0, 360 - elapsed) # 6 menit pengerjaan soal (360 detik)
+        remaining = max(0, 360 - elapsed) # 6 menit pengerjaan (360 detik)
 
         if remaining <= 0:
             st.warning("⏰ Waktu Subtes 9 telah habis! Menyelesaikan seluruh psikotes...")
